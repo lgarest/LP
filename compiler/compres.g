@@ -40,6 +40,10 @@ void zzcr_attr(Attrib *attr, int type, char *text) {
     attr->kind = "id";
     attr->text = text;
   }
+  else if(type == NUM){
+    attr->kind = "intconst";
+    attr->text = text; 
+  }
   else {
     attr->kind = text;
     attr->text = "";
@@ -120,15 +124,13 @@ void ASTPrint(AST *a)
 // EVALUATE
 //////////////////////////////////////////////////////////////////////////////
 int evaluate(AST *a) {
-  // cout << "evaluate " << a->text << endl;
   if (a == NULL) return 0;
   else if (a->kind == "intconst") return atoi(a->text.c_str());
   else if (a->kind == "+") return evaluate(child(a,0)) + evaluate(child(a,1));
   else if (a->kind == "-") return evaluate(child(a,0)) - evaluate(child(a,1));
   else if (a->kind == "*") return evaluate(child(a,0)) * evaluate(child(a,1));
   else if (a->kind == "/") return evaluate(child(a,0)) / evaluate(child(a,1));
-  else if (a->kind == "id") cout << "SURPRISE MUTHAFACKA" ;
-  return m[a->text];
+  return -99;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -137,8 +139,9 @@ int evaluate(AST *a) {
 void execute(AST *als) {
   // cout << "execute" << endl;
   if (als == NULL) return;
-  else if (als->kind == ":=") m[child(als,0)->text] = evaluate(child(als,1));
-  else cout << evaluate(child(als,0)) << endl;
+  else if (als->kind == "=") m[child(als,0)->text] = evaluate(child(als,1));
+  else if (als->kind == "write") cout << m[child(als,0)->text] << endl;
+  else cout << evaluate(child(als,0)) << evaluate(child(als,1)) << endl;
   execute(als->right);
 }
 
@@ -150,7 +153,7 @@ int main() {
   root = NULL;
   ANTLR(compres(&root), stdin);
   ASTPrint(root);
-  execute(root);
+  execute(root->down);
 }
 >>
 
@@ -163,11 +166,15 @@ int main() {
 #token SPACE "[\ \n]" << zzskip();>>
 #token WRITE "write"
 #token ID "[a-zA-Z][a-zA-Z0-9]*"
-#token ASIG ":="
+#token ASIG "="
 
 compres: (opers)* <<#0=createASTlist(_sibling);>> ;
-opers: (ID ASIG^ expr ) | (WRITE^ ID) ;
+prog: (opers)*;
+opers: (ID ASIG^ expr ) | (WRITE^ ID) | expr ;
+
 expr:  term ((ADD^|SUB^) term)* ;
-term: NUM ((MUL^|DIV^) NUM)*;
+term: NUM ((MUL^|DIV^) NUM)* ;
+
+
 
 
