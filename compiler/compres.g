@@ -27,6 +27,11 @@ AST* createASTnode(Attrib* attr, int ttype, char *textt);
 #include <cmath>
 #include <map>
 
+struct compra {
+  int n;
+  string articulo;
+};
+
 
 //global structures
 map<string,int> m;
@@ -41,7 +46,7 @@ void zzcr_attr(Attrib *attr, int type, char *text) {
     attr->text = text;
   }
   else if(type == NUM){
-    attr->kind = "intconst";
+    attr->kind = "";
     attr->text = text; 
   }
   else {
@@ -93,7 +98,10 @@ void ASTPrintIndent(AST *a,string s)
   if (a==NULL) return;
 
   cout<<a->kind;
-  if (a->text!="") cout<<"("<<a->text<<")";
+  if (a->text!="") {
+    if (a->kind != "") cout<<"("<<a->text<<")";
+    else cout << a->text;
+  }
   cout<<endl;
 
   AST *i = a->down;
@@ -125,12 +133,11 @@ void ASTPrint(AST *a)
 //////////////////////////////////////////////////////////////////////////////
 int evaluate(AST *a) {
   if (a == NULL) return 0;
-  else if (a->kind == "intconst") return atoi(a->text.c_str());
   else if (a->kind == "+") return evaluate(child(a,0)) + evaluate(child(a,1));
   else if (a->kind == "-") return evaluate(child(a,0)) - evaluate(child(a,1));
   else if (a->kind == "*") return evaluate(child(a,0)) * evaluate(child(a,1));
   else if (a->kind == "/") return evaluate(child(a,0)) / evaluate(child(a,1));
-  return -99;
+  return atoi(a->text.c_str());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -159,22 +166,30 @@ int main() {
 
 #lexclass START
 #token NUM "[0-9]+"
+#token AND "AND"
+#token MINUS "MINUS"
+#token UNITS "UNITATS"
+#token DESV "DESVIACIO"
+#token PROD "PRODUCTES"
+#token WRITE "write"
+#token ID "[a-zA-Z][a-zA-Z0-9]*"
+
+#token SPACE "[\ \n]" << zzskip();>>
+#token ASIG "="
 #token ADD "\+"
 #token SUB "\-"
 #token MUL "\*"
 #token DIV "\/"
-#token SPACE "[\ \n]" << zzskip();>>
-#token WRITE "write"
-#token ID "[a-zA-Z][a-zA-Z0-9]*"
-#token ASIG "="
-
-compres: (opers)* <<#0=createASTlist(_sibling);>> ;
-prog: (opers)*;
-opers: (ID ASIG^ expr ) | (WRITE^ ID) | expr ;
-
-expr:  term ((ADD^|SUB^) term)* ;
-term: NUM ((MUL^|DIV^) NUM)* ;
+#token OCL "\["
+#token CCL "\]"
+#token OPAR "\("
+#token CPAR "\)"
+#token COMMA ","
 
 
 
-
+// num * (id expr)
+compres: (list_comps)* <<#0=createASTlist(_sibling);>> ;
+list_comps: (ID ASIG^ expr) | (UNITS^ ID) | (DESV^ ID) | (PROD^ ID) ;
+expr: (OCL^ term (COMMA! term)* CCL!) | (ID ((AND^|MINUS^|MUL^) ID)*) ;
+term: (OPAR! NUM^ COMMA! ID CPAR!);
