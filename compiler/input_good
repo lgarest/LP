@@ -11,12 +11,14 @@ UNITATS Compres8
 DESVIACIO Compres7
 PRODUCTES Compres7
 
-//////////// LAS REGLAS SOLO PARA:
-Compres1 = [(1,mantega),(2,tomaquets),(20,aigua)]
-Compres3 = Compres1 AND Compres2
-Compres5 = Compres3 MINUS Compres4
-Compres7 = 3 * Compres5 AND Compres6
-Compres8 = 3*(Compres3 MINUS Compres2)
-UNITATS Compres8
-DESVIACIO Compres7
-PRODUCTES Compres7
+# LAS REGLAS SOLO PARA:
+# Compres1 = [(1,mantega),(2,tomaquets),(20,aigua)]
+# Compres3 = Compres1 AND Compres2
+# Compres5 = Compres3 MINUS Compres4
+# Compres7 = 3 * Compres5 AND Compres6
+# Compres8 = 3*(Compres3 MINUS Compres2)
+# UNITATS Compres8
+# DESVIACIO Compres7
+# PRODUCTES Compres7
+# UNITATS Compres7 = 73
+# UNITATS Compres8 = 69

@@ -9,3 +9,7 @@ You can find more description [here](http://www.fib.upc.edu/en/estudiar-enginyer
 
 
 ```
+
+## HASKELL
+Jordi Petit
+jpetit@lsi.upc.edu

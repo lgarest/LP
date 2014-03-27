@@ -1,5 +1,8 @@
-a = [(1,dildo)]
-Compres1 = [(1,mantega),(2,tomaquets),(3,penes)]
-Compres3 = Compres1 AND Compres2
-Compres5 = Compres3 MINUS Compres4
-// () > * > (MINUS|AND)
+Compres1 = [(69,mantega),(2,tomaquets),(3,penes)]
+Compres3 = Compres1 AND Compres1
+Compres2 = [(2,pomes)]
+Compres7 = 3 * Compres1 AND Compres3
+Compres8 = 3 * (Compres1 MINUS Compres3)
+UNITATS Compres1
+PRODUCTES Compres1
+DESVIACIO Compres1 
