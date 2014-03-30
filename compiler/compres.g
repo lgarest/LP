@@ -41,7 +41,7 @@ void zzcr_attr(Attrib *attr, int type, char *text) {
     attr->text = text;
   }
   else if(type == NUM){
-    attr->kind = "";
+    attr->kind = "num";
     attr->text = text; 
   }
   else {
@@ -142,11 +142,6 @@ void execute(AST *als) {
     cout << "-"<< als->kind << endl;
   }
   execute(als->right);
-  /*if (als == NULL) return;
-  else if (als->kind == "=") m[child(als,0)->text] = evaluate(child(als,1));
-  else if (als->kind == "write") cout << m[child(als,0)->text] << endl;
-  else cout << evaluate(child(als,0)) << evaluate(child(als,1)) << endl;
-  execute(als->right);*/
 }
 
 void assignation(string id, AST *als){
@@ -156,109 +151,197 @@ void assignation(string id, AST *als){
   }
 }
 
-void operation(string id, AST *als){
-  cout << "______(operation) als->text,als->kind "<<als->text<<","<<als->kind<<endl;
-  if (als->right == NULL and als->down == NULL) return;
-  else if(als->right == NULL and als->down != NULL){
-      cout << "llamada_down" << endl;
-      operation(id, als->down);
-      cout << "llamada_down DONE" << endl;
-  }
-  else if(als->right != NULL and als->down == NULL){
+lista_compra multOperation(int x, lista_compra & l){
+  lista_compra aux;
+  aux = l;
+  lista_compra::iterator it;
+  for (it = aux.begin(); it != aux.end(); ++it) it->second *= x;
+  return aux;
+}
 
-      cout << "llamada_right" << endl;
-      operation(id, als->right);
-      cout << "llamada_right DONE" << endl;
-  }
-  else if(als->down != NULL and als->right != NULL){
-    cout << "llamada_down" << endl;
-    operation(id, als->down);
-    cout << "llamada_right" << endl;
-    operation(id, als->right);
-  }
-  // RECUR OVER
-  cout << "___ text,kind: " << als->text <<","<<als->kind << endl;
-  if (als->kind=="AND"){
-      // AND
-    cout <<als->down->text <<"AND"<<als->down->right->text<<endl;
-  }
-  else if (als->kind=="MINUS"){
-      // MINUS
-    cout <<als->down->text <<"MINUS"<<als->down->right->text<<endl;
-  }
-  else if (als->kind=="*"){
-      // *
-    cout <<als->down->text <<"*"<<als->down->right->text<<endl;
+lista_compra andOperation(lista_compra & a, lista_compra & b){
+  lista_compra c; // c will be the larger list
+  lista_compra aux; // aux will be the shortest list
+
+  c = b;
+  aux = a;
+  if (a.size() > b.size()) {
+    c = a;
+    aux = b;
   }
 
-  
-  // operacion
-  // AND unio
-  // MINUS resta
-  // * multiplica la resta
-  /*if (als->down->right->kind == "AND") {
-    cout << "AND" << endl;
+  lista_compra::iterator it;
+  lista_compra::iterator it2;
+
+  // we iterate over the shortest list
+  for(it=aux.begin(); it!=aux.end(); it++){
+    it2 = c.find(it->first);
+    if(it2 != c.end()) it2->second += it->second;
+    else c[it->first] = it->second;
   }
-  else if (als->down->right->kind == "MINUS") {
-    cout << "MINUS" << endl;
+  return c;
+}
+
+lista_compra minusOperation(lista_compra & a, lista_compra & b){
+  lista_compra c; // c will be the larger list
+
+  c = a;
+
+  lista_compra::iterator it;
+  lista_compra::iterator it2;
+
+  // we iterate over the second list
+  for(it=b.begin(); it!=b.end(); it++){
+    it2 = c.find(it->first);
+    if(it2 != c.end()) {
+      it2->second -= it->second;
+      if (it2->second < 0) it2->second = 0;
+    }
   }
-  else if (als->down->right->kind == "*") {
-    cout << "*" << endl;
+  return c;
+}
+
+double stdDesviation(string id){
+  double mean = 0.0;
+  double desviation = 0.0;
+  lista_compra l;
+  lista_compra::iterator it;
+  l = m[id];
+
+  // calculate the mean
+  for(it=l.begin(); it!=l.end(); it++) mean += it->second;
+  mean /= l.size();
+
+  // calculate the std desviation
+  for(it=l.begin(); it!=l.end(); it++) desviation += pow(it->second - mean,2);
+  desviation = sqrt(desviation);
+
+  return desviation;
+}
+
+lista_compra operation(AST *als){
+  if (als == NULL){
+    lista_compra aux;
+    return aux;
   }
   else{
-    cout << "error: 2else" <<endl;
-  }*/
+      lista_compra aux1; // 1st child
+      lista_compra aux2; // 2nd child
+
+      aux1 = operation(als->down);
+      if (als->down != NULL and als->down->right != NULL) aux2 = operation(als->down->right);
+
+      if (aux1.size() == 0 and aux2.size() == 0){
+        // returned empty lists
+        if (als->kind == "id"){
+          lista_ids::iterator it;
+          it = m.find(als->text);
+          if(it != m.end()) return it->second;
+          else cerr << "**Compilation error: Variable '" <<als->text << "' is not declared." << endl;
+        }
+      }
+      // else if(aux1.size() != 0 and aux2.size() == 0){
+      //   cout << als->kind << ":" << als->text << "|||| ";
+      //   cout << als->down->kind << ":" << als->down->text << endl;
+      // }
+      else if(aux1.size() == 0 and aux2.size() != 0){
+        if (als->down->kind != "id"){
+          int operand = atoi(als->down->text.c_str());
+          // cout << operand << " " << als->kind << " " << als->down->right->text << endl;
+          if (als->kind == "*") return multOperation(operand, aux2);
+          else cerr << "ERROR SHIT: " << als->kind << endl;
+        }
+        else cerr << als->kind << als->text <<" | **Generation Error: (tree not genrated properly) brother inconnected" << endl;
+      }
+      else{
+        // cout << "Operation between: " << als->down->kind<<als->down->text << " " << als->kind <<" "<< als->down->right->text << als->down->right->kind << endl;
+        if (als->kind == "AND") return andOperation (aux1, aux2);
+        else if(als->kind == "MINUS") return minusOperation (aux1, aux2);
+      }
+      lista_compra aux;
+      return aux;
+  }
 }
 
 void displayResults(AST *als){
   if (als->kind == "UNITATS"){
-    lista_compra::iterator it;
+    // Display the list total # of items
     lista_compra aux;
-    aux = m[als->down->text];
+    lista_ids::iterator it;
+    it = m.find(als->down->text);
     int total_units = 0;
 
-    for(it = aux.begin(); it != aux.end(); it++) total_units += it->second;
+    if(it != m.end()){
+      aux = m[als->down->text];
+      lista_compra::iterator it;
+      for(it = aux.begin(); it != aux.end(); it++) total_units += it->second;
+    }
+    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
     cout << total_units << endl;
   }
   else if (als->kind == "PRODUCTES"){
+    // Display the items inside of the list
     lista_compra aux;
-    aux = m[als->down->text];
-    lista_compra::iterator it = aux.begin();
-    while(it != aux.end()){
-      cout << it->first << ": " << it->second << endl;
-      it++;
+    lista_ids::iterator it;
+    it = m.find(als->down->text);
+    if(it!=m.end()){
+      aux = m[als->down->text];
+      lista_compra::iterator it = aux.begin();
+      while(it != aux.end()){
+        cout << it->first << ": " << it->second << endl;
+        it++;
+      }
     }
+    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
   }
   else if (als->kind == "DESVIACIO"){
-    // TODO:
-    cout << "DESVIACIO" << endl;
+    // Display the standard desviation of a list
+    lista_ids::iterator it;
+    it = m.find(als->down->text);
+    if(it!=m.end())
+      cout << "DESVIACIO: " << stdDesviation(als->down->text) << endl;
+    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
   }
   else ;
 }
 
+/* FUNCTION: lookForPatterns
+ This function identifies patterns at first level, it can distinguish assignations from operations and from results display functions
+ - parameters:
+    - als (pointer): it points to the first child of the instruction.
+*/
 void lookForPatterns(AST *als){
+  // base case: return NULL value
   if (als==NULL) return;
-  else if (als->kind == "="){
-    cout << "als->down->right->kind: " << als->down->right->kind << endl;
-    // list type
-    if (als->down->right->kind == "[") {
-      AST *aux;
-      // Aux points to the first list item.
-      aux = als->down->right->down;
-      // Assigns to the id the list aux.
-      assignation(als->down->text, aux);
-    }
-    else {
-      AST *aux;
-      aux = als->down->right;
-      operation(als->down->text, aux);
-    }
-    // m[als->text][""] = 0;
-  }
   else{
-    displayResults(als);
+    // recursive case:
+    // - 1: identify the pattern
+    // - 2: get the result from the instruction
+    // - 3: call recursively to the next instruction
+    if (als->kind == "="){
+      // list declaration
+      if (als->down->right->kind == "[") {
+        AST *aux;
+        // Aux points to the first list item
+        aux = als->down->right->down;
+        // Assigns to the id the result list aux
+        assignation(als->down->text, aux);
+      }
+      else {
+        // list as a result of consecutive operations
+        AST *aux;
+        aux = als->down->right;
+        // aux points to the first operation between lists
+        m[als->down->text] = operation(aux);
+      }
+    }
+    else{
+      // displays results
+      displayResults(als);
+    }
+    // recursive call for the next instruction
+    lookForPatterns(als->right);
   }
-  lookForPatterns(als->right);
 }
 
 //////////////////////////////////////////////////////////////////////////////
