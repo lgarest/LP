@@ -217,7 +217,7 @@ double stdDesviation(string id){
 
   // calculate the std desviation
   for(it=l.begin(); it!=l.end(); it++) desviation += pow(it->second - mean,2);
-  desviation = sqrt(desviation);
+  desviation = sqrt(desviation/l.size());
 
   return desviation;
 }
