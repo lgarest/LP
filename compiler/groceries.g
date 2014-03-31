@@ -1,3 +1,7 @@
+/* Student: Luis Garcia Estrades
+  Subject: LP
+  SubGroup: 13 */
+
 #header
 <<
 #include <string>
@@ -121,15 +125,19 @@ void ASTPrint(AST *a) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// AUXILIAR FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
 /* FUNCTION: assignation
  Stores list products and values identified by a given id
  - parameters:
     - id (string): the id of the variable.
-    - als (pointer): it points to the first child of the instruction. */
-void assignation(string id, AST *als){
-  while (als != NULL){
-    m[id][als->down->text] = atoi(als->text.c_str());
-    als = als->right;
+    - p (pointer): it points to the first child of the instruction. */
+void assignation(string id, AST *p){
+  while (p != NULL){
+    m[id][p->down->text] = atoi(p->text.c_str());
+    p = p->right;
   }
 }
 
@@ -229,9 +237,9 @@ double stdDesviation(string id){
   -'MINUS': to substract a list from another.
   -'*': to multiply the number of the products of a list.
  - parameters:
-    - als (pointer): it points to the first child of the instruction. */
-shoppingList operation(AST *als){
-  if (als == NULL){
+    - p (pointer): it points to the first child of the instruction. */
+shoppingList operation(AST *p){
+  if (p == NULL){
     shoppingList aux;
     return aux;
   }
@@ -239,35 +247,35 @@ shoppingList operation(AST *als){
       shoppingList aux1; // 1st child
       shoppingList aux2; // 2nd child
 
-      aux1 = operation(als->down);
+      aux1 = operation(p->down);
       // check if a 2nd child is factible and calls the function by it
-      if (als->down != NULL and als->down->right != NULL) aux2 = operation(als->down->right);
+      if (p->down != NULL and p->down->right != NULL) aux2 = operation(p->down->right);
 
       if (aux1.size() == 0 and aux2.size() == 0){
         // if returned empty lists
 
-        if (als->kind == "id"){
+        if (p->kind == "id"){
           idsList::iterator it;
-          it = m.find(als->text);
+          it = m.find(p->text);
           if(it != m.end()) return it->second;
-          else cerr << "**Compilation error: Variable '" <<als->text << "' is not declared." << endl;
+          else cerr << "**Compilation error: Variable '" <<p->text << "' is not declared." << endl;
         }
       }
       else if(aux1.size() == 0 and aux2.size() != 0){
         // if returned list by first child and filled list by second child
 
         // if the child is a id
-        if (als->down->kind != "id"){
-          int operand = atoi(als->down->text.c_str());
+        if (p->down->kind != "id"){
+          int operand = atoi(p->down->text.c_str());
           // if the node is a multiplication
-          if (als->kind == "*") return multOperation(operand, aux2);
-          else cerr << "ERROR on: " << als->kind << endl;
+          if (p->kind == "*") return multOperation(operand, aux2);
+          else cerr << "ERROR on: " << p->kind << endl;
         }
-        else cerr <<"**Generation Error: (tree not genrated properly) brother " <<als->kind << als->text << " inconnected."<< endl;
+        else cerr <<"**Generation Error: (tree not genrated properly) brother " <<p->kind << p->text << " inconnected."<< endl;
       }
       else{
-        if (als->kind == "AND") return andOperation (aux1, aux2);
-        else if(als->kind == "MINUS") return minusOperation (aux1, aux2);
+        if (p->kind == "AND") return andOperation (aux1, aux2);
+        else if(p->kind == "MINUS") return minusOperation (aux1, aux2);
       }
       // Otherwise return empty list
       shoppingList aux;
@@ -278,52 +286,52 @@ shoppingList operation(AST *als){
 /* FUNCTION: displayResults
  This function displays info about the given parent nodes.
  - parameters:
-    - als (pointer): it points to the first child of the instruction.
+    - p (pointer): it points to the first child of the instruction.
       Can be:
       - units of the list.
       - products followed by units of the list.
       - the standard desviation of the units of the list. */
-void displayResults(AST *als){
-  if (als->kind == "UNITATS"){
+void displayResults(AST *p){
+  if (p->kind == "UNITATS"){
     // Display the list total # of items
     shoppingList aux;
     idsList::iterator it;
-    it = m.find(als->down->text);
+    it = m.find(p->down->text);
     int total_units = 0;
 
     // if the id has been declared
     if(it != m.end()){
-      aux = m[als->down->text];
+      aux = m[p->down->text];
       shoppingList::iterator it;
       for(it = aux.begin(); it != aux.end(); it++) total_units += it->second;
     }
     // else show a neaty error message indicating the reason
-    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
-    cout << "UNITATS " << als->down->text << ": " << total_units << endl;
+    else cerr << "**ERROR: variable '" << p->down->text << "' not declared" << endl;
+    cout << "UNITATS " << p->down->text << ": " << total_units << endl;
   }
-  else if (als->kind == "PRODUCTES"){
+  else if (p->kind == "PRODUCTES"){
     // Display the items inside of the list
     shoppingList aux;
     idsList::iterator it;
-    it = m.find(als->down->text);
+    it = m.find(p->down->text);
     if(it!=m.end()){
-      aux = m[als->down->text];
+      aux = m[p->down->text];
       shoppingList::iterator it = aux.begin();
-      cout << "PRODUCTES " << als->down->text <<":"<< endl;
+      cout << "PRODUCTES " << p->down->text <<":"<< endl;
       while(it != aux.end()){
         cout << "    |--- " << it->first << ": " << it->second << endl;
         it++;
       }
     }
-    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
+    else cerr << "**ERROR: variable '" << p->down->text << "' not declared" << endl;
   }
-  else if (als->kind == "DESVIACIO"){
+  else if (p->kind == "DESVIACIO"){
     // Display the standard desviation of a list
     idsList::iterator it;
-    it = m.find(als->down->text);
+    it = m.find(p->down->text);
     if(it!=m.end())
-      cout << "DESVIACIO " << als->down->text << ": " << stdDesviation(als->down->text) << endl;
-    else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
+      cout << "DESVIACIO " << p->down->text << ": " << stdDesviation(p->down->text) << endl;
+    else cerr << "**ERROR: variable '" << p->down->text << "' not declared" << endl;
   }
   else ;
 }
@@ -331,38 +339,38 @@ void displayResults(AST *als){
 /* FUNCTION: lookForPatterns
  This function identifies patterns at first level, it can distinguish assignations from operations and from results display functions
  - parameters:
-    - als (pointer): it points to the first child of the instruction. */
-void lookForPatterns(AST *als){
+    - p (pointer): it points to the first child of the instruction. */
+void lookForPatterns(AST *p){
   // base case: return NULL value
-  if (als==NULL) return;
+  if (p==NULL) return;
   else{
     // recursive case:
     // - 1: identify the pattern
     // - 2: get the result from the instruction
     // - 3: call recursively to the next instruction
-    if (als->kind == "="){
+    if (p->kind == "="){
       // list declaration
-      if (als->down->right->kind == "[") {
+      if (p->down->right->kind == "[") {
         AST *aux;
         // Aux points to the first list item
-        aux = als->down->right->down;
+        aux = p->down->right->down;
         // Assigns to the id the result list aux
-        assignation(als->down->text, aux);
+        assignation(p->down->text, aux);
       }
       else {
         // list as a result of consecutive operations
         AST *aux;
-        aux = als->down->right;
+        aux = p->down->right;
         // aux points to the first operation between lists
-        m[als->down->text] = operation(aux);
+        m[p->down->text] = operation(aux);
       }
     }
     else{
       // displays results
-      displayResults(als);
+      displayResults(p);
     }
     // recursive call for the next instruction
-    lookForPatterns(als->right);
+    lookForPatterns(p->right);
   }
 }
 
@@ -375,6 +383,7 @@ int main() {
   ASTPrint(root);
   lookForPatterns(root->down);
 }
+
 >>
 //////////////////////////////////////////////////////////////////////////////
 // TOKENS AND GRAMMAR DECLARATION
