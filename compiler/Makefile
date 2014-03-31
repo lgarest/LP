@@ -9,8 +9,5 @@ compres: compres.c
 compres.c: compres.g
 		antlr -gt compres.g
 		dlg -ci parser.dlg scan.c
-derp:
-		antlr -gt compres.g
-		dlg -ci parser.dlg scan.c
 clean:
 		rm -f *.o *.c compres.exe parser.dlg tokens.h mode.h scan.c err.c
