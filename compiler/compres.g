@@ -28,9 +28,11 @@ AST* createASTnode(Attrib* attr, int ttype, char *textt);
 #include <map>
 
 //global structures
-typedef map<string,int> lista_compra;
-typedef map<string, lista_compra> lista_ids;
-lista_ids m;
+// Stores a int value for a string "apples": 3
+typedef map<string,int> shoppingList;
+// Stores a list for a string "Compres1" = shoppingList
+typedef map<string, shoppingList> idsList;
+idsList m;
 AST *root;
 
 
@@ -119,31 +121,11 @@ void ASTPrint(AST *a) {
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// EVALUATE
-//////////////////////////////////////////////////////////////////////////////
-int evaluate(AST *a) {
-  /*if (a == NULL) return 0;
-  else if (a->kind == "+") return evaluate(child(a,0)) + evaluate(child(a,1));
-  else if (a->kind == "-") return evaluate(child(a,0)) - evaluate(child(a,1));
-  else if (a->kind == "*") return evaluate(child(a,0)) * evaluate(child(a,1));
-  else if (a->kind == "/") return evaluate(child(a,0)) / evaluate(child(a,1));
-  return atoi(a->text.c_str());*/
-
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// EXECUTE
-//////////////////////////////////////////////////////////////////////////////
-void execute(AST *als) {
-  cout << "execute" << endl;
-  if (als==NULL) return;
-  else{
-    cout << "-"<< als->kind << endl;
-  }
-  execute(als->right);
-}
-
+/* FUNCTION: assignation
+ Stores list products and values identified by a given id
+ - parameters:
+    - id (string): the id of the variable.
+    - als (pointer): it points to the first child of the instruction. */
 void assignation(string id, AST *als){
   while (als != NULL){
     m[id][als->down->text] = atoi(als->text.c_str());
@@ -151,17 +133,27 @@ void assignation(string id, AST *als){
   }
 }
 
-lista_compra multOperation(int x, lista_compra & l){
-  lista_compra aux;
+/* FUNCTION: multOperation
+ Multiplies the number of the products by a number and returns the calculated list.
+ - parameters:
+    - x (int): the number to be multiplied.
+    - l (shoppingList): contains a list with items and units. */
+shoppingList multOperation(int x, shoppingList & l){
+  shoppingList aux;
   aux = l;
-  lista_compra::iterator it;
+  shoppingList::iterator it;
   for (it = aux.begin(); it != aux.end(); ++it) it->second *= x;
   return aux;
 }
 
-lista_compra andOperation(lista_compra & a, lista_compra & b){
-  lista_compra c; // c will be the larger list
-  lista_compra aux; // aux will be the shortest list
+/* FUNCTION: andOperation
+ Returns c as the union of two lists a and b.
+ - parameters:
+    - a (shoppingList): a shopping list with items and units.
+    - b (shoppingList): a shopping list with items and units.*/
+shoppingList andOperation(shoppingList & a, shoppingList & b){
+  shoppingList c; // 'c' the larger list and the list returned.
+  shoppingList aux; // 'aux' the shortest list.
 
   c = b;
   aux = a;
@@ -170,10 +162,10 @@ lista_compra andOperation(lista_compra & a, lista_compra & b){
     aux = b;
   }
 
-  lista_compra::iterator it;
-  lista_compra::iterator it2;
+  shoppingList::iterator it;  // 'it' will iterate over the short list.
+  shoppingList::iterator it2; // 'it2' will find if an item is inside c.
 
-  // we iterate over the shortest list
+  // we iterate over the shortest list 'aux'.
   for(it=aux.begin(); it!=aux.end(); it++){
     it2 = c.find(it->first);
     if(it2 != c.end()) it2->second += it->second;
@@ -182,13 +174,18 @@ lista_compra andOperation(lista_compra & a, lista_compra & b){
   return c;
 }
 
-lista_compra minusOperation(lista_compra & a, lista_compra & b){
-  lista_compra c; // c will be the larger list
+/* FUNCTION: minusOperation
+ Returns c as the result of a - b
+ - parameters:
+    - a (shoppingList): a shopping list with items and units.
+    - b (shoppingList): a shopping list with items and units. */
+shoppingList minusOperation(shoppingList & a, shoppingList & b){
+  shoppingList c; // 'c' the larger list.
 
   c = a;
 
-  lista_compra::iterator it;
-  lista_compra::iterator it2;
+  shoppingList::iterator it;  // 'it' will iterate over the second list. 
+  shoppingList::iterator it2; // 'it2' will find if an item is inside 'a'.
 
   // we iterate over the second list
   for(it=b.begin(); it!=b.end(); it++){
@@ -201,11 +198,17 @@ lista_compra minusOperation(lista_compra & a, lista_compra & b){
   return c;
 }
 
+/* FUNCTION: stdDesviation
+ Returns the standard desviation of a list given by its id.
+ - parameters:
+    - id (string): identifies the name of a list.
+  For further information about the standard desviation:
+  http://en.wikipedia.org/wiki/Standard_deviation  */
 double stdDesviation(string id){
   double mean = 0.0;
   double desviation = 0.0;
-  lista_compra l;
-  lista_compra::iterator it;
+  shoppingList l;
+  shoppingList::iterator it;
   l = m[id];
 
   // calculate the mean
@@ -219,76 +222,96 @@ double stdDesviation(string id){
   return desviation;
 }
 
-lista_compra operation(AST *als){
+/* FUNCTION: operation
+ Calculates operations recursively between lists or between a number and a list and returns the result list.
+ The operations can be:
+  -'AND': to merge two lists.
+  -'MINUS': to substract a list from another.
+  -'*': to multiply the number of the products of a list.
+ - parameters:
+    - als (pointer): it points to the first child of the instruction. */
+shoppingList operation(AST *als){
   if (als == NULL){
-    lista_compra aux;
+    shoppingList aux;
     return aux;
   }
   else{
-      lista_compra aux1; // 1st child
-      lista_compra aux2; // 2nd child
+      shoppingList aux1; // 1st child
+      shoppingList aux2; // 2nd child
 
       aux1 = operation(als->down);
+      // check if a 2nd child is factible and calls the function by it
       if (als->down != NULL and als->down->right != NULL) aux2 = operation(als->down->right);
 
       if (aux1.size() == 0 and aux2.size() == 0){
-        // returned empty lists
+        // if returned empty lists
+
         if (als->kind == "id"){
-          lista_ids::iterator it;
+          idsList::iterator it;
           it = m.find(als->text);
           if(it != m.end()) return it->second;
           else cerr << "**Compilation error: Variable '" <<als->text << "' is not declared." << endl;
         }
       }
-      // else if(aux1.size() != 0 and aux2.size() == 0){
-      //   cout << als->kind << ":" << als->text << "|||| ";
-      //   cout << als->down->kind << ":" << als->down->text << endl;
-      // }
       else if(aux1.size() == 0 and aux2.size() != 0){
+        // if returned list by first child and filled list by second child
+
+        // if the child is a id
         if (als->down->kind != "id"){
           int operand = atoi(als->down->text.c_str());
-          // cout << operand << " " << als->kind << " " << als->down->right->text << endl;
+          // if the node is a multiplication
           if (als->kind == "*") return multOperation(operand, aux2);
-          else cerr << "ERROR SHIT: " << als->kind << endl;
+          else cerr << "ERROR on: " << als->kind << endl;
         }
-        else cerr << als->kind << als->text <<" | **Generation Error: (tree not genrated properly) brother inconnected" << endl;
+        else cerr <<"**Generation Error: (tree not genrated properly) brother " <<als->kind << als->text << " inconnected."<< endl;
       }
       else{
-        // cout << "Operation between: " << als->down->kind<<als->down->text << " " << als->kind <<" "<< als->down->right->text << als->down->right->kind << endl;
         if (als->kind == "AND") return andOperation (aux1, aux2);
         else if(als->kind == "MINUS") return minusOperation (aux1, aux2);
       }
-      lista_compra aux;
+      // Otherwise return empty list
+      shoppingList aux;
       return aux;
   }
 }
 
+/* FUNCTION: displayResults
+ This function displays info about the given parent nodes.
+ - parameters:
+    - als (pointer): it points to the first child of the instruction.
+      Can be:
+      - units of the list.
+      - products followed by units of the list.
+      - the standard desviation of the units of the list. */
 void displayResults(AST *als){
   if (als->kind == "UNITATS"){
     // Display the list total # of items
-    lista_compra aux;
-    lista_ids::iterator it;
+    shoppingList aux;
+    idsList::iterator it;
     it = m.find(als->down->text);
     int total_units = 0;
 
+    // if the id has been declared
     if(it != m.end()){
       aux = m[als->down->text];
-      lista_compra::iterator it;
+      shoppingList::iterator it;
       for(it = aux.begin(); it != aux.end(); it++) total_units += it->second;
     }
+    // else show a neaty error message indicating the reason
     else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
-    cout << total_units << endl;
+    cout << "UNITATS " << als->down->text << ": " << total_units << endl;
   }
   else if (als->kind == "PRODUCTES"){
     // Display the items inside of the list
-    lista_compra aux;
-    lista_ids::iterator it;
+    shoppingList aux;
+    idsList::iterator it;
     it = m.find(als->down->text);
     if(it!=m.end()){
       aux = m[als->down->text];
-      lista_compra::iterator it = aux.begin();
+      shoppingList::iterator it = aux.begin();
+      cout << "PRODUCTES " << als->down->text <<":"<< endl;
       while(it != aux.end()){
-        cout << it->first << ": " << it->second << endl;
+        cout << "    |--- " << it->first << ": " << it->second << endl;
         it++;
       }
     }
@@ -296,10 +319,10 @@ void displayResults(AST *als){
   }
   else if (als->kind == "DESVIACIO"){
     // Display the standard desviation of a list
-    lista_ids::iterator it;
+    idsList::iterator it;
     it = m.find(als->down->text);
     if(it!=m.end())
-      cout << "DESVIACIO: " << stdDesviation(als->down->text) << endl;
+      cout << "DESVIACIO " << als->down->text << ": " << stdDesviation(als->down->text) << endl;
     else cerr << "**ERROR: variable '" << als->down->text << "' not declared" << endl;
   }
   else ;
@@ -308,8 +331,7 @@ void displayResults(AST *als){
 /* FUNCTION: lookForPatterns
  This function identifies patterns at first level, it can distinguish assignations from operations and from results display functions
  - parameters:
-    - als (pointer): it points to the first child of the instruction.
-*/
+    - als (pointer): it points to the first child of the instruction. */
 void lookForPatterns(AST *als){
   // base case: return NULL value
   if (als==NULL) return;
@@ -351,11 +373,12 @@ int main() {
   root = NULL;
   ANTLR(compres(&root), stdin);
   ASTPrint(root);
-  // execute(root->down);
   lookForPatterns(root->down);
 }
 >>
-
+//////////////////////////////////////////////////////////////////////////////
+// TOKENS AND GRAMMAR DECLARATION
+//////////////////////////////////////////////////////////////////////////////
 #lexclass START
 #token NUM "[0-9]+"
 #token AND "AND"
@@ -396,6 +419,3 @@ list_item: OPAR! NUM^ COMMA! ID CPAR!;
 
 // 3*(id MINUS id) | 3 * id AND id
 term: (NUM MUL^)* (ID | (OPAR! oper CPAR!));
-
-// expr:  term ((PLUS^|MINUS^) term)* ;
-// term: NUM ((TIMES^|DIV^) NUM)*;
