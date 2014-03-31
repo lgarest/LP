@@ -1,0 +1,4 @@
+Compres1 = [(3,mantega),(2,tomaquets),(1,pene)]
+Compres2 = [(1,chichi)]
+Compres4 = [(1,consolador)]
+Compres3 = 3* (Compres1 AND Compres2) MINUS Compres4

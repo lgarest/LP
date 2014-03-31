@@ -1,0 +1,62 @@
+/*
+  si el a->right es null y a->down es null return
+  si a->right es != null y a->down != null llamas al child
+  si right null y down != null llamas al child
+  si right != null y down==null {
+    \__=
+    |   \__id(Compres7)
+    |   \__AND
+    |         \__*
+    |         |   \__3
+    |         |   \__id(Compres1)
+    |         \__id(Compres3)
+  }
+*/
+
+\__=
+  \__id(Compres3)
+  \__AND
+        \__MINUS
+        |       \__AND
+        |       |     \__id(Compres1)
+        |       |     \__id(Compres2)
+        |       \__id(Compres4)
+        \__id(Compres1)
+=
+C3 -> AND
+     MINUS -> C1
+      AND -> C4
+      C1 -> C2
+
+
+=
+C3 -> AND
+       * -> C2
+       3 -> C1
+
+\__=
+      \__id(Compres3)
+      \__AND
+            \__*
+            |   \__3
+            |   \__id(Compres1)
+            \__id(Compres2)
+
+C3 = 3 * (C1 AND C2) MINUS C4
+
+=
+C3 -> MINUS
+        * -> C4
+        3 -> AND
+              C1 -> C2
+
+
+  \__=
+      \__id(Compres3)
+      \__MINUS
+              \__*
+              |   \__3
+              |   \__AND
+              |         \__id(Compres1)
+              |         \__id(Compres2)
+              \__id(Compres4)
