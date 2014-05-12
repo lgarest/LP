@@ -7,28 +7,6 @@ Prelude> mod 10 2
 Prelude> 
 Prelude> mod 10 3
 1
-Prelude> 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Prelude> 
-Prelude> 
-Prelude> 
-Prelude> 
 Prelude> 10 `div` 2
 5
 Prelude> 5 == 5
